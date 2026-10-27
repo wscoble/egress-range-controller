@@ -1,0 +1,51 @@
+{{- if .Values.egressRanges.create }}
+{{- $e := .Values.egressRanges }}
+{{- if and (eq $e.source.type "ripestat-rpki") (not $e.source.ripestat.asn) }}{{ fail "egressRanges.source.ripestat.asn is required for ripestat-rpki" }}{{ end }}
+{{- if not (or $e.networkPolicy.podSelector.matchLabels $e.networkPolicy.podSelector.matchExpressions) }}{{ fail "egressRanges.networkPolicy.podSelector must select the target pods" }}{{ end }}
+apiVersion: egress.greybeard.support/v1alpha1
+kind: EgressRanges
+metadata:
+  name: {{ $e.name }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "erc.labels" . | nindent 4 }}
+spec:
+  source:
+    type: {{ $e.source.type }}
+    {{- if eq $e.source.type "ripestat-rpki" }}
+    ripestat: {{- toYaml $e.source.ripestat | nindent 6 }}
+    {{- else if eq $e.source.type "static" }}
+    static: {{- toYaml $e.source.static | nindent 6 }}
+    {{- else if eq $e.source.type "url" }}
+    url: {{- toYaml $e.source.url | nindent 6 }}
+    {{- end }}
+  {{- with $e.pinned }}
+  pinned: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $e.endpoints }}
+  endpoints: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  mode: {{ $e.mode }}
+  ipFamilies: {{- toYaml $e.ipFamilies | nindent 4 }}
+  pollInterval: {{ $e.pollInterval }}
+  jitterPercent: {{ $e.jitterPercent }}
+  quarantinePeriod: {{ $e.quarantinePeriod }}
+  unreachableAlertAfter: {{ $e.unreachableAlertAfter }}
+  dnssec: {{- toYaml $e.dnssec | nindent 4 }}
+  approval:
+    mode: {{ $e.approval.mode }}
+    maxChangeFraction: {{ $e.approval.maxChangeFraction | quote }}
+    noReplyPolicy: {{ $e.approval.noReplyPolicy }}
+  verification:
+    enabled: {{ $e.notifier.enabled }}
+    {{- with $e.notifier.to }}
+    to: {{ . }}
+    {{- end }}
+    {{- with $e.notifier.from }}
+    from: {{ . }}
+    {{- end }}
+    minInterval: {{ $e.notifier.minInterval }}
+  {{- with $e.notifyWebhook }}
+  notifyWebhook: {{ . }}
+  {{- end }}
+  networkPolicy: {{- toYaml $e.networkPolicy | nindent 4 }}
+{{- end }}

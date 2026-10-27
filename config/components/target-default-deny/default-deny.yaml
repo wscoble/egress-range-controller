@@ -1,0 +1,11 @@
+# The rendered policy only ALLOWS traffic. Without a default-deny egress policy
+# for the same pods, they can still reach everything. Only add this if you don't
+# already have one, and only after the controller has rendered its first policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-target-default-deny
+spec:
+  podSelector:
+    matchLabels: { app: proton-bridge }
+  policyTypes: ["Egress"]

@@ -1,0 +1,34 @@
+# Namespaced: the controller can only see and change objects in its own namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: egress-range-controller
+  labels:
+    app.kubernetes.io/name: egress-range-controller
+rules:
+  - apiGroups: ["egress.greybeard.support"]
+    resources: ["egressranges"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["egress.greybeard.support"]
+    resources: ["egressranges/status"]
+    verbs: ["get", "update", "patch"]
+  # list/watch/create can't be limited by resourceNames (Kubernetes RBAC limitation).
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["list", "watch", "create"]
+  # Writes to an existing policy are limited to the one rendered policy.
+  # Keep this name in sync with spec.networkPolicy.name.
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    resourceNames: ["proton-bridge-egress-allow"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    resourceNames: ["egress-range-controller.egress.greybeard.support"]
+    verbs: ["get", "update", "patch"]

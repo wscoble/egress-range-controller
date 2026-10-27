@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target: { kind: NetworkPolicy, name: egress-target-default-deny }
+    patch: |-
+      - op: replace
+        path: /spec/podSelector/matchLabels
+        value: { app: example }

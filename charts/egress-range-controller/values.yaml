@@ -1,0 +1,115 @@
+# -- Defaults are generic. See examples/proton-values.yaml for the Proton Bridge setup.
+
+image:
+  repository: ghcr.io/wscoble/egress-range-controller
+  tag: ""                      # defaults to .Chart.AppVersion
+  digest: ""                   # sha256:... pins the image (overrides tag)
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# Create the release namespace with Pod Security "restricted" labels.
+# Leave false if the namespace already exists (it must allow restricted pods).
+namespace:
+  create: false
+  podSecurity: restricted
+
+resources:
+  requests: { cpu: 10m, memory: 32Mi }
+  limits: { cpu: 200m, memory: 128Mi }
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+logLevel: info
+
+leaderElection:
+  enabled: true
+
+metrics:
+  port: 8080
+health:
+  port: 8081
+
+rbac:
+  create: true
+  # Also create an "approver" Role (patch egressranges) for humans to bind.
+  createApproverRole: true
+
+serviceAccount:
+  create: true
+  name: ""
+
+# The controller's own egress NetworkPolicy.
+controllerNetworkPolicy:
+  enabled: true
+  apiServer:
+    # In-cluster kubernetes Service IP plus the real API endpoint(s); many CNIs
+    # match egress after DNAT. Find yours: kubectl get endpoints kubernetes -n default
+    cidrs: ["10.43.0.1/32"]
+    ports: [443, 6443]
+  clusterDNS: true
+  # Resolver IPs to allow (should match egressRanges.dnssec.resolvers).
+  resolverCIDRs: ["1.1.1.1/32", "9.9.9.9/32"]
+  resolverPorts:
+    - { protocol: TCP, port: 853 }
+    - { protocol: UDP, port: 53 }
+    - { protocol: TCP, port: 53 }
+  # Where the prefix source (stat.ripe.net or your URL) lives. NetworkPolicy
+  # can't match hostnames, so the default is any public IPv4 on 443.
+  sourceCIDRs: ["0.0.0.0/0"]
+  sourceExcept: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "169.254.0.0/16", "127.0.0.0/8"]
+  sourcePorts: [443]
+  extraEgress: []              # raw NetworkPolicyEgressRule list, e.g. for notifyWebhook
+
+# Optional default-deny egress policy for the target pods. The rendered policy
+# only ALLOWS traffic; without some default-deny, the pods can still go anywhere.
+targetDefaultDeny:
+  enabled: false
+
+# The EgressRanges object (the configuration). Set create=false to manage it yourself.
+egressRanges:
+  create: true
+  name: default
+  source:
+    type: ripestat-rpki          # ripestat-rpki | static | url
+    ripestat:
+      asn: 0                     # REQUIRED for ripestat-rpki, e.g. 62371
+      baseURL: https://stat.ripe.net
+      sourceApp: egress-range-controller
+    static:
+      cidrs: []
+    url:
+      url: ""                    # https URL serving one CIDR per line
+  pinned: []                     # always enforced, never removed
+  endpoints: []                  # hostnames that must resolve (DNSSEC) inside the enforced set
+  mode: minimal                  # minimal | all
+  ipFamilies: [IPv4]
+  pollInterval: 6h
+  jitterPercent: 10
+  quarantinePeriod: 72h
+  unreachableAlertAfter: 24h
+  dnssec:
+    resolvers:
+      - tls://1.1.1.1:853#cloudflare-dns.com
+      - tls://9.9.9.9:853#dns.quad9.net
+    requireAD: true
+    timeout: 5s
+  approval:
+    mode: auto                   # auto | manual
+    maxChangeFraction: "0.5"     # bigger changes need the approve annotation
+    noReplyPolicy: promote       # promote | hold (when verification gets no answer)
+  # Verification request to the provider's NOC. Only COMPOSED into status and an
+  # Event; the controller has no mail-sending code.
+  notifier:
+    enabled: false
+    to: ""                       # e.g. noc@proton.ch
+    from: ""
+    minInterval: 168h
+  notifyWebhook: ""              # optional JSON POST target (add egress via extraEgress)
+  networkPolicy:
+    name: egress-allow
+    podSelector:
+      matchLabels: {}            # REQUIRED: the pods to allow, e.g. {app: proton-bridge}
+    ports:
+      - { protocol: TCP, port: 443 }
+    allowDNS: true

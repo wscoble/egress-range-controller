@@ -1,0 +1,7 @@
+bin/
+dist/
+.git/
+charts/
+config/
+deploy/
+docs/

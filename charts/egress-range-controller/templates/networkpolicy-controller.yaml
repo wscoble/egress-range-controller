@@ -1,0 +1,59 @@
+{{- if .Values.controllerNetworkPolicy.enabled }}
+{{- $np := .Values.controllerNetworkPolicy }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "erc.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "erc.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "erc.selectorLabels" . | nindent 6 }}
+  policyTypes: ["Egress"]
+  egress:
+    # Kubernetes API (Service IP and real endpoints)
+    - to:
+        {{- range $np.apiServer.cidrs }}
+        - ipBlock: { cidr: {{ . }} }
+        {{- end }}
+      ports:
+        {{- range $np.apiServer.ports }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
+    {{- if $np.clusterDNS }}
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    {{- end }}
+    {{- if and $np.resolverCIDRs .Values.egressRanges.endpoints }}
+    # DNSSEC-validating resolvers
+    - to:
+        {{- range $np.resolverCIDRs }}
+        - ipBlock: { cidr: {{ . }} }
+        {{- end }}
+      ports: {{- toYaml $np.resolverPorts | nindent 8 }}
+    {{- end }}
+    {{- if and $np.sourceCIDRs (ne .Values.egressRanges.source.type "static") }}
+    # Prefix source. Hostnames can't be matched, so this is broad by default.
+    - to:
+        {{- range $np.sourceCIDRs }}
+        - ipBlock:
+            cidr: {{ . }}
+            {{- if and (eq . "0.0.0.0/0") $np.sourceExcept }}
+            except: {{- toYaml $np.sourceExcept | nindent 14 }}
+            {{- end }}
+        {{- end }}
+      ports:
+        {{- range $np.sourcePorts }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
+    {{- end }}
+    {{- with $np.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,85 @@
+{
+  "bootstrapEnforced": {
+    "cidrs": [
+      "185.70.40.0/22",
+      "185.70.42.0/24"
+    ],
+    "digest": "sha256:c699e68e58f47d5522a6e46438807246e592bf6512e67811af3bdccb2f810d7d",
+    "since": "2026-10-27T21:29:37Z"
+  },
+  "candidate": [
+    "185.70.40.0/22",
+    "185.70.42.0/24"
+  ],
+  "candidateDigest": "sha256:c699e68e58f47d5522a6e46438807246e592bf6512e67811af3bdccb2f810d7d",
+  "conditions": [
+    {
+      "type": "SourceUnavailable",
+      "status": "False",
+      "observedGeneration": 1,
+      "lastTransitionTime": "2026-10-27T21:29:37Z",
+      "reason": "FetchOK",
+      "message": "RIPEstat announced-prefixes+rpki-validation AS62371"
+    },
+    {
+      "type": "Quarantined",
+      "status": "False",
+      "observedGeneration": 1,
+      "lastTransitionTime": "2026-10-27T21:29:37Z",
+      "reason": "InSync",
+      "message": "no pending change"
+    },
+    {
+      "type": "NeedsApproval",
+      "status": "False",
+      "observedGeneration": 1,
+      "lastTransitionTime": "2026-10-27T21:29:37Z",
+      "reason": "NothingPending",
+      "message": ""
+    },
+    {
+      "type": "EndpointOutsideEnforced",
+      "status": "False",
+      "observedGeneration": 1,
+      "lastTransitionTime": "2026-10-27T21:29:37Z",
+      "reason": "AllInside",
+      "message": ""
+    }
+  ],
+  "dnssecError": "",
+  "events": [
+    {
+      "Type": "Normal",
+      "Reason": "Bootstrapped",
+      "Message": "initial enforced set c699e68e58f4: 185.70.40.0/22,185.70.42.0/24"
+    }
+  ],
+  "fetchError": "",
+  "resolved": {
+    "account.proton.me": [
+      "185.70.42.36"
+    ],
+    "mail-api.proton.me": [
+      "185.70.42.41"
+    ]
+  },
+  "rpkiNotAccepted": null,
+  "rpkiValid": [
+    "79.135.106.0/24",
+    "79.135.107.0/24",
+    "95.36.96.0/24",
+    "95.36.98.0/24",
+    "109.224.244.0/24",
+    "109.224.247.0/24",
+    "176.119.200.0/24",
+    "185.70.40.0/24",
+    "185.70.41.0/24",
+    "185.70.42.0/24",
+    "185.70.43.0/24",
+    "185.205.70.0/24",
+    "194.0.147.0/24"
+  ],
+  "safetyFailures": null,
+  "source": "RIPEstat announced-prefixes+rpki-validation AS62371",
+  "time": "2026-10-27T21:29:37Z"
+}

@@ -1,0 +1,15 @@
+egress-range-controller
+Copyright 2026 Greybeard Holdings LLC
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It depends on third-party open source software, including:
+  - Kubernetes client libraries and controller-runtime (Apache-2.0)
+  - github.com/miekg/dns (BSD-3-Clause)
+  - Prometheus client_golang (Apache-2.0)
+The container image is based on gcr.io/distroless/static (Apache-2.0 and the
+licenses of the bundled Debian packages).
+
+Prefix data comes from RIPEstat (https://stat.ripe.net), operated by the RIPE NCC,
+used under its terms of use. This project is not affiliated with the RIPE NCC
+or with Proton AG.

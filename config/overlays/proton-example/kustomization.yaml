@@ -1,0 +1,16 @@
+# Runs the controller next to Proton Bridge in the `mail` namespace.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mail
+resources:
+  - ../../default
+  - egressranges.yaml
+patches:
+  - target: { kind: Namespace, name: egress-range-controller }
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: mail
+# Uncomment if `mail` has no default-deny egress policy for app=proton-bridge yet:
+# components:
+#   - ../../components/target-default-deny

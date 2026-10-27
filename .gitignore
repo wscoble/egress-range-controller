@@ -1,0 +1,9 @@
+/bin/
+/dist/
+*.tgz
+*.test
+*.out
+cover.html
+.idea/
+.vscode/
+.DS_Store

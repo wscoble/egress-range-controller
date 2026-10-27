@@ -1,0 +1,14 @@
+egress-range-controller is running in {{ .Release.Namespace }}.
+
+  kubectl -n {{ .Release.Namespace }} get egressranges
+  kubectl -n {{ .Release.Namespace }} describe egressranges {{ .Values.egressRanges.name }}
+  kubectl -n {{ .Release.Namespace }} get networkpolicy {{ .Values.egressRanges.networkPolicy.name }} -o yaml
+
+Approve a pending set early (only soft checks can be overridden):
+  kubectl -n {{ .Release.Namespace }} annotate egressranges {{ .Values.egressRanges.name }} \
+    egress.greybeard.support/approve-digest=<status.pending.digest> --overwrite
+{{- if not .Values.targetDefaultDeny.enabled }}
+
+NOTE: the rendered policy only ALLOWS traffic. Make sure a default-deny egress
+policy also selects the target pods, or set targetDefaultDeny.enabled=true.
+{{- end }}

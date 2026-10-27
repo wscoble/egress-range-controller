@@ -1,0 +1,66 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "erc.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "erc.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["egress.greybeard.support"]
+    resources: ["egressranges"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["egress.greybeard.support"]
+    resources: ["egressranges/status"]
+    verbs: ["get", "update", "patch"]
+  # list/watch/create can't be limited by resourceNames (Kubernetes RBAC limitation)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["list", "watch", "create"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    resourceNames: [{{ .Values.egressRanges.networkPolicy.name | quote }}]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    resourceNames: [{{ include "erc.leaseName" . | quote }}]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "erc.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "erc.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "erc.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "erc.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- if .Values.rbac.createApproverRole }}
+---
+# Bind to the humans who may approve/reject pending sets. RBAC can't separate
+# annotations from spec, so this also allows spec edits.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "erc.fullname" . }}-approver
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "erc.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["egress.greybeard.support"]
+    resources: ["egressranges"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+{{- end }}
+{{- end }}

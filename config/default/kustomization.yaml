@@ -1,0 +1,10 @@
+# Base: everything except the EgressRanges object itself.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: egress-range-controller
+resources:
+  - namespace.yaml
+  - ../crd
+  - ../rbac
+  - ../network-policy
+  - ../manager

@@ -1,0 +1,56 @@
+# The controller's own egress. Everything not listed is denied for the controller pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-range-controller
+  labels:
+    app.kubernetes.io/name: egress-range-controller
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: egress-range-controller
+  policyTypes: ["Egress"]
+  egress:
+    # Kubernetes API. Many CNIs (including kube-router on k3s) evaluate egress
+    # after the Service DNAT, so allow both the in-cluster Service IP (443) and
+    # the real API server endpoint(s) (usually 6443). CHANGE THESE for your
+    # cluster: `kubectl get endpoints kubernetes -n default`.
+    - to:
+        - ipBlock: { cidr: 10.43.0.1/32 }        # k3s default kubernetes Service IP
+        - ipBlock: { cidr: 192.0.2.10/32 }       # PLACEHOLDER (TEST-NET-1): your API server endpoint
+      ports:
+        - { protocol: TCP, port: 443 }
+        - { protocol: TCP, port: 6443 }
+    # Cluster DNS (only needed for the API server name and any url source).
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    # DNSSEC-validating resolvers (DoT by default; 53 kept for plain ip:53 resolvers).
+    - to:
+        - ipBlock: { cidr: 1.1.1.1/32 }
+        - ipBlock: { cidr: 9.9.9.9/32 }
+      ports:
+        - { protocol: TCP, port: 853 }
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    # Prefix source (stat.ripe.net). NetworkPolicy can't match hostnames, so
+    # this is deliberately broad: any public IPv4 on 443. To narrow it, replace
+    # with the RIPE NCC block (stat.ripe.net was 193.0.6.150 in 193.0.0.0/21 on
+    # 2026-10-27) and re-check when RIPE moves it.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+              - 127.0.0.0/8
+      ports:
+        - { protocol: TCP, port: 443 }

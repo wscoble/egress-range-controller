@@ -1,0 +1,16 @@
+# Bind this to the humans allowed to approve or reject pending sets
+# (kubectl annotate egressranges/<name> egress.greybeard.support/approve-digest=<digest>).
+# Note: RBAC can't separate annotations from spec, so "patch" here also allows spec edits.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: egress-range-approver
+  labels:
+    app.kubernetes.io/name: egress-range-controller
+rules:
+  - apiGroups: ["egress.greybeard.support"]
+    resources: ["egressranges"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]

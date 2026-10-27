@@ -1,0 +1,42 @@
+apiVersion: egress.greybeard.support/v1alpha1
+kind: EgressRanges
+metadata:
+  name: default
+spec:
+  source:
+    type: ripestat-rpki
+    ripestat:
+      asn: 62371                      # Proton AG
+  pinned:
+    - 185.70.40.0/22                  # never removed by the controller
+  endpoints:
+    - mail-api.proton.me
+    - account.proton.me
+  mode: minimal
+  ipFamilies: ["IPv4"]
+  pollInterval: 6h
+  jitterPercent: 10
+  quarantinePeriod: 72h
+  unreachableAlertAfter: 24h
+  dnssec:
+    resolvers:
+      - tls://1.1.1.1:853#cloudflare-dns.com
+      - tls://9.9.9.9:853#dns.quad9.net
+    requireAD: true
+  approval:
+    mode: auto
+    maxChangeFraction: "0.5"
+    noReplyPolicy: promote
+  verification:
+    enabled: false                    # composes a message into status/Event only; never sends
+    to: noc@proton.ch                 # Proton NOC (tech-c on AS62371's RIPE record)
+  notifyWebhook: ""
+  networkPolicy:
+    name: proton-bridge-egress-allow
+    podSelector:
+      matchLabels:
+        app: proton-bridge
+    ports:
+      - protocol: TCP
+        port: 443
+    allowDNS: true

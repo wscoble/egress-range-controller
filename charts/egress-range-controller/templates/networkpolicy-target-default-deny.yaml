@@ -1,0 +1,11 @@
+{{- if .Values.targetDefaultDeny.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "erc.fullname" . }}-target-default-deny
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "erc.labels" . | nindent 4 }}
+spec:
+  podSelector: {{- toYaml .Values.egressRanges.networkPolicy.podSelector | nindent 4 }}
+  policyTypes: ["Egress"]
+{{- end }}

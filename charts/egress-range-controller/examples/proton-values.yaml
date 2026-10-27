@@ -1,0 +1,18 @@
+# helm install egress-range-controller charts/egress-range-controller -n mail -f charts/egress-range-controller/examples/proton-values.yaml
+controllerNetworkPolicy:
+  apiServer:
+    cidrs: ["10.43.0.1/32", "192.0.2.10/32"]   # replace 192.0.2.10 with your API server endpoint
+egressRanges:
+  source:
+    type: ripestat-rpki
+    ripestat:
+      asn: 62371
+  pinned: ["185.70.40.0/22"]
+  endpoints: [mail-api.proton.me, account.proton.me]
+  notifier:
+    enabled: false
+    to: noc@proton.ch
+  networkPolicy:
+    name: proton-bridge-egress-allow
+    podSelector:
+      matchLabels: { app: proton-bridge }

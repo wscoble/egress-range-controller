@@ -1,0 +1,19 @@
+apiVersion: egress.greybeard.support/v1alpha1
+kind: EgressRanges
+metadata:
+  name: default
+spec:
+  source:
+    type: static
+    static:
+      cidrs:
+        - 192.0.2.0/24
+        - 198.51.100.0/24
+  pinned:
+    - 192.0.2.0/24
+  mode: all
+  networkPolicy:
+    name: example-egress-allow
+    podSelector:
+      matchLabels:
+        app: example

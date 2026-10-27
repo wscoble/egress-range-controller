@@ -1,0 +1,15 @@
+apiVersion: v2
+name: egress-range-controller
+description: Keeps a Kubernetes egress NetworkPolicy in sync with a provider's published IP ranges, with RPKI and DNSSEC checks and a quarantine before any change is enforced.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.25.0-0"
+home: https://github.com/wscoble/egress-range-controller
+sources:
+  - https://github.com/wscoble/egress-range-controller
+license: Apache-2.0
+keywords: [networkpolicy, egress, rpki, dnssec, allowlist]
+maintainers:
+  - name: Scott Scoble
+    url: https://github.com/wscoble
